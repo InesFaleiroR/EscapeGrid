@@ -1,0 +1,27 @@
+# Ficheiros compilados
+*.o
+*.out
+*.exe
+EscapeGrid
+
+# Pasta de build (se usares)
+build/
+
+# Ficheiros temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Logs locais (opcional)
+logs/*.log
+
+# Ficheiros do editor
+.vscode/
+.idea/
+
+# Ficheiros de backup
+*~
+*.swp
+*.bak
+
+# Debug files
+core
