@@ -60,7 +60,6 @@ O projeto foi cuidadosamente organizado para garantir clareza e escalabilidade. 
 │   ├── src/
 │   │   ├── main.c       # O coração do jogo
 │   │   ├── game.c       # Lógica principal e loop do jogo
-│   │   ├── game.h       # Definições globais e interfaces
 │   │   ├── player.c     # Movimentos e interações do jogador
 │   │   ├── enemy.c      # Inteligência artificial do inimigo
 │   │   ├── maze.c       # Geração e gestão do labirinto

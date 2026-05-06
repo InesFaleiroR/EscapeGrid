@@ -1,10 +1,14 @@
+# =========================
+# EscapeGrid - Makefile Final (MSYS2)
+# =========================
+
 # Nome do executável
-TARGET = EscapeGrid
+TARGET = EscapeGrid.exe
 
 # Compilador
 CC = gcc
 
-# Flags de compilação (warnings + debug básico)
+# Flags de compilação
 CFLAGS = -Wall -Wextra -std=c11 -Iinclude
 
 # Ficheiros fonte
@@ -14,27 +18,36 @@ SRCS = src/main.c \
        src/enemy.c \
        src/maze.c
 
-# Ficheiros objeto (gera automaticamente a partir dos .c)
+# Objetos gerados automaticamente
 OBJS = $(SRCS:.c=.o)
 
-# Regra principal
+# =========================
+# REGRAS PRINCIPAIS
+# =========================
+
 all: $(TARGET)
 
-# Criar executável
+# Link final
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+	$(CC) $(OBJS) -o $(TARGET)
 
-# Compilar ficheiros .c em .o
-%.o: %.c
+# Compilação dos .c para .o
+src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpar ficheiros compilados
+# =========================
+# LIMPEZA (MSYS2 COMPATÍVEL)
+# =========================
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f src/*.o EscapeGrid.exe 2>/dev/null || true
 
-# Recompilar tudo do zero
-rebuild: clean all
-
-# Executar o jogo
-run: $(TARGET)
+# =========================
+# EXECUÇÃO
+# =========================
+run: all
 	./$(TARGET)
+
+# =========================
+# REBUILD COMPLETO
+# =========================
+rebuild: clean all
