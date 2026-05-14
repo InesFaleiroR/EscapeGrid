@@ -1,16 +1,41 @@
 #include <stdio.h>
-#include <windows.h>
-#include "../include/game.h"
+#include <stdlib.h>
+#include <time.h>
 
-int main() {
-    // Configura o terminal para aceitar caracteres especiais (UTF-8)
-    SetConsoleOutputCP(65001);
-    system("cls"); // Limpa o lixo do compilador
+#include "../include/game.h"
+#include "../include/render.h"
+#include "../include/input.h"
+#include "../include/utils.h"
+#include "../include/ranking.h"
+
+int main(void) {
+    srand((unsigned int)time(NULL));
+    setupConsole();
+    ensureRankingFile();
 
     Game game;
     initGame(&game);
-    gameLoop(&game);
 
-    printf("\nJogo Terminado. Obrigado por jogar!\n");
+    while (game.state != STATE_QUIT) {
+        if (game.state == STATE_MENU) {
+            renderMenu();
+            processMenuInput(&game);
+        } else if (game.state == STATE_PLAYING) {
+            renderGame(&game);
+            processGameInput(&game);
+        } else if (game.state == STATE_VICTORY) {
+            renderVictory(&game);
+            processMenuInput(&game);
+        } else if (game.state == STATE_GAMEOVER) {
+            renderGameOver(&game);
+            processMenuInput(&game);
+        } else if (game.state == STATE_RANKING) {
+            renderRankingScreen();
+            processMenuInput(&game);
+        }
+    }
+
+    showCursor();
+    clearScreen();
     return 0;
 }
