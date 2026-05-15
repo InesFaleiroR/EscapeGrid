@@ -256,3 +256,183 @@ O jogo abre com um menu onde o jogador introduz o nome, escolhe a dificuldade e 
 ## Resumo
 
 O EscapeGrid Premium é um projeto completo, profissional e pronto a entregar, que combina geração procedural, inteligência artificial com BFS, persistência de dados, interface colorida em Unicode e uma estrutura de código modular. A experiência de jogo escala em dificuldade ao longo de 5 níveis, com um inimigo cada vez mais inteligente e menos tempo disponível — oferecendo uma combinação de estratégia, reflexos e diversão diretamente no terminal.
+
+
+̳ ៱˳_˳៱ ̳ ∫     凸(¬‿¬)凸
+ ✅ ❌ ✖ ✔ ● ○ ★ ☆
+# Update FINAL
+## Estrutura Final
+
+EscapeGrid/
+│
+├── Makefile                         ← `make` compila | `make run` compila e executa
+│
+├── data/
+│   └── ranking.txt                  ← criado automaticamente em runtime
+│
+├── include/
+│   ├── game.h         ✅           ← struct Game + enums + protótipos centrais
+│   ├── maze.h         ✅           ← generateMaze / carveMaze / isWalkable
+│   ├── enemy.h        ✅           ← moveEnemy / predictPlayerTarget
+│   ├── render.h       ✅           ← todas as funções de renderização
+│   ├── input.h        ✅           ← handlers de input por estado
+│   ├── timer.h        ✅           ← updateTimer
+│   ├── ranking.h      ✅           ← CRUD ranking.txt
+│   ├── utils.h        ✅           ← console Windows (ANSI, cursor, sleep)
+│   ├── pathfinding.h  ✅*New       ← pathExists + bfsNextStep
+│   └── powerups.h     ✅*New       ← generatePowerUps + collectPowerUp
+│
+└── src/
+    ├── main.c                       ← loop principal (switch por GameState)
+    ├── game.c                       ← initGame / setupLevel / nextLevel / endGame
+    ├── maze.c                       ← DFS + BFS solvability + key/NPC/wall/path
+    ├── enemy.c                      ← AI via BFS + previsão preditiva
+    ├── render.c                     ← Neonpunk glyphs + paredes contextuais
+    ├── input.c                      ← WASD/setas + pausa + dificuldade
+    ├── timer.c                      ← contagem decrescente via time()
+    ├── ranking.c                    ← load/save/insert/print ranking
+    ├── utils.c                      ← SetConsoleOutputCP + ANSI + cursor
+    ├── pathfinding.c                ← BFS genérico (2 variantes)
+    └── powerups.c                   ← colocação + recolha + efeito slow
+
+
+
+# LOG.md — EscapeGrid
+
+## Projeto: EscapeGrid
+
+## Linguagem: C (C11)
+
+## Tipo: Jogo de labirinto com IA e estética Neonpunk
+
+---
+
+# Guia de execução e compilação do projeto
+
+## Objetivo
+
+Explicar o processo completo desde a extração do ficheiro `.zip` até à execução do jogo no terminal.
+
+---
+
+## 1. Extrair o ficheiro .zip
+
+Não é recomendado compilar ou executar ficheiros diretamente dentro da pasta compactada.
+
+### Passos:
+
+* Clicar com o botão direito no ficheiro `.zip`
+* Selecionar:
+
+  * **Extrair Tudo...**
+* Escolher a pasta de destino
+* Confirmar a extração
+
+Exemplo:
+
+* Área de Trabalho
+
+---
+
+## 2. Abrir o terminal na pasta correta
+
+Depois de extrair os ficheiros, abrir o terminal e navegar até à pasta do projeto.
+
+### MSYS2 MINGW64
+
+```bash
+cd "/c/Users/SeuNome/Desktop/EscapeGrid"
+```
+
+### PowerShell
+
+```powershell
+cd "C:\Users\SeuNome\Desktop\EscapeGrid"
+```
+
+Substituir:
+
+```text
+Nome_Da_Pasta_Extraida
+```
+
+pelo nome real da pasta criada após a extração.
+
+---
+
+## 3. Limpar ficheiros antigos (opcional)
+
+Para evitar conflitos com executáveis antigos ou ficheiros temporários.
+
+### MSYS2
+
+```bash
+mingw32-make clean
+```
+
+### PowerShell
+
+Caso o `make` não esteja configurado:
+
+* apagar manualmente:
+
+```text
+EscapeGrid.exe
+```
+
+---
+
+## 4. Compilar o projeto
+
+Compilar todos os ficheiros `.c` e gerar o executável atualizado.
+
+### MSYS2
+
+```bash
+mingw32-make
+```
+
+O Makefile compila automaticamente:
+
+* game.c
+* maze.c
+* render.c
+* enemy.c
+* pathfinding.c
+* powerups.c
+* ranking.c
+* timer.c
+* input.c
+* utils.c
+* main.c
+
+---
+
+## 5. Executar o jogo
+
+Após compilação sem erros:
+
+### MSYS2
+
+```bash
+./EscapeGrid.exe
+```
+
+### PowerShell
+
+```powershell
+.\EscapeGrid.exe
+```
+
+---
+
+## Notas importantes
+
+Caso existam erros:
+
+* verificar se todos os ficheiros `.c` e `.h` estão presentes
+* confirmar se o Makefile está atualizado
+* garantir que o terminal está na pasta correta
+* verificar se o GCC/MINGW64 está instalado
+
+---

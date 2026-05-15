@@ -4,9 +4,10 @@
 #include "game.h"
 
 void clearScreen(void);
-void moveCursorTop(void);
 void renderMenu(void);
+void renderDifficultyScreen(void);
 void renderGame(Game *game);
+void renderPauseScreen(Game *game);
 void renderVictory(Game *game);
 void renderGameOver(Game *game);
 void renderRankingScreen(void);

@@ -1,49 +1,62 @@
-#include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "../include/game.h"
 #include "../include/maze.h"
+#include "../include/powerups.h"
 #include "../include/ranking.h"
 
 static void applyDifficulty(Game *game) {
-    if (game->difficulty == DIFFICULTY_EASY) {
-        game->enemyMoveDelay = 3;
-        game->aiPredictionBias = 20;
-        game->timeLimit = 90 - ((game->level - 1) * 5);
-    } else if (game->difficulty == DIFFICULTY_MEDIUM) {
-        game->enemyMoveDelay = 2;
-        game->aiPredictionBias = 45;
-        game->timeLimit = 75 - ((game->level - 1) * 5);
-    } else {
-        game->enemyMoveDelay = 1;
-        game->aiPredictionBias = 70;
-        game->timeLimit = 60 - ((game->level - 1) * 4);
-    }
+    game->fogEnabled       = 0;
+    game->fogRadius        = 0;
+    game->keyRequired      = 0;
+    game->npcActive        = 0;
+    game->extraWallChance  = 0;
+    game->extraPathChance  = 0;
+    game->aiPredictionBias = 0;
 
-    if (game->timeLimit < 25) {
-        game->timeLimit = 25;
+    switch (game->difficulty) {
+        case DIFFICULTY_EASY:
+            game->enemyMoveDelay  = 5;
+            game->timeLimit       = 180;
+            game->fogRadius       = 0;
+            game->extraPathChance = 30;
+            game->npcActive       = 1;
+            break;
+        case DIFFICULTY_MEDIUM:
+            game->enemyMoveDelay   = 3;
+            game->timeLimit        = 100;
+            game->extraPathChance  = 0;
+            game->keyRequired      = 1;
+            game->npcActive        = 1;
+            game->aiPredictionBias = 1;
+            break;
+        case DIFFICULTY_HARD:
+            game->enemyMoveDelay   = 1;
+            game->timeLimit        = 70;
+            game->fogEnabled       = 1;
+            game->fogRadius        = 4;
+            game->extraWallChance  = 8;
+            game->keyRequired      = 1;
+            game->npcActive        = 0;
+            game->aiPredictionBias = 3;
+            break;
     }
+    if (game->timeLimit < 30) game->timeLimit = 30;
 }
 
 void initGame(Game *game) {
     memset(game, 0, sizeof(Game));
-    game->running = 1;
     game->state = STATE_MENU;
-    game->difficulty = DIFFICULTY_MEDIUM;
-    game->level = 1;
-    game->score = 0;
     strcpy(game->playerName, "PLAYER");
 }
 
 void setupNewRun(Game *game, const char *name, Difficulty diff) {
-    memset(game->maze, '#', sizeof(game->maze));
-    game->difficulty = diff;
-    game->level = 1;
-    game->score = 0;
-    game->enemyTick = 0;
-    game->fogEnabled = 0;
     strncpy(game->playerName, name, MAX_NAME_LEN - 1);
     game->playerName[MAX_NAME_LEN - 1] = '\0';
+    game->difficulty = diff;
+    game->score      = 0;
+    game->level      = 1;
     setupLevel(game);
     game->state = STATE_PLAYING;
 }
@@ -51,9 +64,11 @@ void setupNewRun(Game *game, const char *name, Difficulty diff) {
 void setupLevel(Game *game) {
     applyDifficulty(game);
     generateMaze(game);
-    game->timeRemaining = game->timeLimit;
-    game->levelStartClock = clock();
-    game->enemyTick = 0;
+    generatePowerUps(game);
+    game->timeRemaining  = game->timeLimit;
+    game->levelStartTime = time(NULL);
+    game->enemyTick      = 0;
+    game->slowEnemyTicks = 0;
 }
 
 void nextLevel(Game *game) {
@@ -64,31 +79,15 @@ void nextLevel(Game *game) {
 
 void resetCurrentLevel(Game *game) {
     setupLevel(game);
-    game->state = STATE_PLAYING;
 }
 
 void endGame(Game *game, int victory) {
-    if (victory) {
-        RankEntry entry;
-        strncpy(entry.name, game->playerName, MAX_NAME_LEN - 1);
-        entry.name[MAX_NAME_LEN - 1] = '\0';
-        entry.score = game->score;
-        entry.level = game->level;
-        entry.difficulty = game->difficulty;
-        insertRanking(&entry);
-        game->state = STATE_VICTORY;
-    } else {
-        RankEntry entry;
-        strncpy(entry.name, game->playerName, MAX_NAME_LEN - 1);
-        entry.name[MAX_NAME_LEN - 1] = '\0';
-        entry.score = game->score;
-        entry.level = game->level;
-        entry.difficulty = game->difficulty;
-        insertRanking(&entry);
-        game->state = STATE_GAMEOVER;
-    }
-}
-
-void showMenu(Game *game) {
-    game->state = STATE_MENU;
+    RankEntry entry;
+    strncpy(entry.name, game->playerName, MAX_NAME_LEN - 1);
+    entry.name[MAX_NAME_LEN - 1] = '\0';
+    entry.score      = game->score;
+    entry.level      = game->level;
+    entry.difficulty = (int)game->difficulty;
+    insertRanking(&entry);
+    game->state = victory ? STATE_VICTORY : STATE_GAMEOVER;
 }

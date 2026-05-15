@@ -3,8 +3,7 @@
 
 #include "game.h"
 
-void moveEnemy(Game *game);
-Position getNextEnemyMoveBFS(Game *game);
+void     moveEnemy(Game *game);
 Position predictPlayerTarget(Game *game);
 
 #endif

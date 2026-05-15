@@ -17,21 +17,37 @@ int main(void) {
     initGame(&game);
 
     while (game.state != STATE_QUIT) {
-        if (game.state == STATE_MENU) {
-            renderMenu();
-            processMenuInput(&game);
-        } else if (game.state == STATE_PLAYING) {
-            renderGame(&game);
-            processGameInput(&game);
-        } else if (game.state == STATE_VICTORY) {
-            renderVictory(&game);
-            processMenuInput(&game);
-        } else if (game.state == STATE_GAMEOVER) {
-            renderGameOver(&game);
-            processMenuInput(&game);
-        } else if (game.state == STATE_RANKING) {
-            renderRankingScreen();
-            processMenuInput(&game);
+        switch (game.state) {
+            case STATE_MENU:
+                renderMenu();
+                processMenuInput(&game);
+                break;
+            case STATE_DIFFICULTY:
+                renderDifficultyScreen();
+                processDifficultyInput(&game);
+                break;
+            case STATE_PLAYING:
+                renderGame(&game);
+                processGameInput(&game);
+                break;
+            case STATE_PAUSED:
+                renderPauseScreen(&game);
+                processPauseInput(&game);
+                break;
+            case STATE_VICTORY:
+                renderVictory(&game);
+                processMenuInput(&game);
+                break;
+            case STATE_GAMEOVER:
+                renderGameOver(&game);
+                processMenuInput(&game);
+                break;
+            case STATE_RANKING:
+                renderRankingScreen();
+                processMenuInput(&game);
+                break;
+            default:
+                break;
         }
     }
 

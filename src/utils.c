@@ -1,30 +1,28 @@
 #include <stdio.h>
 #include <string.h>
-
 #include "../include/utils.h"
 
 void enableANSI(void) {
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    DWORD console_mode = 0;
-    GetConsoleMode(hOut, &console_mode);
-    console_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(hOut, console_mode);
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD  m = 0;
+    GetConsoleMode(h, &m);
+    SetConsoleMode(h, m | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 }
 
 void hideCursor(void) {
-    HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO cursor_info;
-    GetConsoleCursorInfo(console_handle, &cursor_info);
-    cursor_info.bVisible = FALSE;
-    SetConsoleCursorInfo(console_handle, &cursor_info);
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO ci;
+    GetConsoleCursorInfo(h, &ci);
+    ci.bVisible = FALSE;
+    SetConsoleCursorInfo(h, &ci);
 }
 
 void showCursor(void) {
-    HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO cursor_info;
-    GetConsoleCursorInfo(console_handle, &cursor_info);
-    cursor_info.bVisible = TRUE;
-    SetConsoleCursorInfo(console_handle, &cursor_info);
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO ci;
+    GetConsoleCursorInfo(h, &ci);
+    ci.bVisible = TRUE;
+    SetConsoleCursorInfo(h, &ci);
 }
 
 void setupConsole(void) {
@@ -34,25 +32,15 @@ void setupConsole(void) {
     printf("\x1b[2J\x1b[H");
 }
 
-void sleepMs(int ms_val) {
-    Sleep(ms_val);
-}
+void sleepMs(int ms) { Sleep((DWORD)ms); }
 
 int randomOdd(int minVal, int maxVal) {
-    int number_val = minVal + (rand() % (maxVal - minVal + 1));
-    if (number_val % 2 == 0) {
-        if (number_val < maxVal) {
-            number_val++;
-        } else {
-            number_val--;
-        }
-    }
-    return number_val;
+    int n = minVal + rand() % (maxVal - minVal + 1);
+    if (n % 2 == 0) n = (n < maxVal) ? n + 1 : n - 1;
+    return n;
 }
 
-void trimNewline(char *text) {
-    int len_val = (int)strlen(text);
-    if (len_val > 0 && text[len_val - 1] == '\n') {
-        text[len_val - 1] = '\0';
-    }
+void trimNewline(char *s) {
+    int l = (int)strlen(s);
+    if (l > 0 && s[l - 1] == '\n') s[l - 1] = '\0';
 }

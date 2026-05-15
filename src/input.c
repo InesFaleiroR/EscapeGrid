@@ -5,160 +5,127 @@
 #include "../include/input.h"
 #include "../include/maze.h"
 #include "../include/enemy.h"
+#include "../include/powerups.h"
 #include "../include/render.h"
 #include "../include/utils.h"
 
-static void readPlayerName(char *nameBuffer, int maxLen) {
-    char temp_name[128];
-    printf("Nome do jogador: ");
-    fgets(temp_name, sizeof(temp_name), stdin);
+#define KEY_UP    72
+#define KEY_DOWN  80
+#define KEY_LEFT  75
+#define KEY_RIGHT 77
 
-    if (temp_name[0] == '\n' || temp_name[0] == '\0') {
-        strncpy(nameBuffer, "PLAYER", maxLen - 1);
-        nameBuffer[maxLen - 1] = '\0';
-        return;
-    }
+static void movePlayer(Game *game, int dx, int dy) {
+    int nx = game->player.x + dx;
+    int ny = game->player.y + dy;
 
-    {
-        int len_val = (int)strlen(temp_name);
-        if (len_val > 0 && temp_name[len_val - 1] == '\n') {
-            temp_name[len_val - 1] = '\0';
-        }
-    }
+    if (!isWalkable(game, nx, ny)) return;
+    if (game->maze[ny][nx] == CELL_EXIT && game->keyRequired && !game->hasKey) return;
 
-    strncpy(nameBuffer, temp_name, maxLen - 1);
-    nameBuffer[maxLen - 1] = '\0';
-}
+    game->player.x = nx;
+    game->player.y = ny;
 
-static Difficulty readDifficulty(void) {
-    char diff_val[16];
-    int option_val = 2;
+    if (game->npcActive && nx == game->npcPos.x && ny == game->npcPos.y)
+        game->npcTalked = 1;
 
-    printf("Dificuldade 1-Fácil 2-Médio 3-Difícil: ");
-    fgets(diff_val, sizeof(diff_val), stdin);
-    sscanf(diff_val, "%d", &option_val);
+    collectPowerUp(game);
 
-    if (option_val < 1 || option_val > 3) {
-        option_val = 2;
-    }
-
-    return (Difficulty)option_val;
-}
-
-static void tryMovePlayer(Game *game, int dx_val, int dy_val) {
-    int nx_val = game->player.x + dx_val;
-    int ny_val = game->player.y + dy_val;
-
-    if (isWalkable(game, nx_val, ny_val)) {
-        game->player.x = nx_val;
-        game->player.y = ny_val;
+    if (game->keyRequired && !game->hasKey && game->maze[ny][nx] == CELL_KEY) {
+        game->hasKey = 1;
+        game->maze[ny][nx] = CELL_PATH;
+        game->score += 30;
     }
 
     if (game->player.x == game->exitPos.x && game->player.y == game->exitPos.y) {
-        if (game->level >= 5) {
-            endGame(game, 1);
-            return;
-        }
-        nextLevel(game);
+        if (game->level >= 5) endGame(game, 1);
+        else                  nextLevel(game);
         return;
     }
 
-    game->enemyTick++;
-    if (game->enemyTick >= game->enemyMoveDelay) {
-        moveEnemy(game);
-        game->enemyTick = 0;
+    if (game->slowEnemyTicks > 0) {
+        game->slowEnemyTicks--;
+    } else {
+        game->enemyTick++;
+        if (game->enemyTick >= game->enemyMoveDelay) {
+            moveEnemy(game);
+            game->enemyTick = 0;
+        }
     }
 
-    if (game->player.x == game->enemy.x && game->player.y == game->enemy.y) {
+    if (game->player.x == game->enemy.x && game->player.y == game->enemy.y)
         endGame(game, 0);
-    }
-}
-
-void waitForAnyKey(void) {
-    _getch();
 }
 
 void processMenuInput(Game *game) {
-    if (game->state == STATE_MENU) {
-        char option_text[16];
-        char player_name[MAX_NAME_LEN];
-
-        fgets(option_text, sizeof(option_text), stdin);
-
-        if (option_text[0] == '1') {
-            readPlayerName(player_name, MAX_NAME_LEN);
-            setupNewRun(game, player_name, readDifficulty());
-        } else if (option_text[0] == '2') {
-            game->state = STATE_RANKING;
-        } else {
-            game->state = STATE_QUIT;
-        }
-        return;
-    }
+    char option[16];
 
     if (game->state == STATE_VICTORY || game->state == STATE_GAMEOVER) {
-        char option_text[16];
-        fgets(option_text, sizeof(option_text), stdin);
-
-        if (option_text[0] == '1') {
-            game->state = STATE_MENU;
-        } else if (option_text[0] == '2') {
-            game->state = STATE_RANKING;
-        } else {
-            game->state = STATE_QUIT;
-        }
-        return;
+        _getch(); game->state = STATE_MENU; return;
     }
-
     if (game->state == STATE_RANKING) {
-        waitForAnyKey();
-        game->state = STATE_MENU;
+        waitForAnyKey(); game->state = STATE_MENU; return;
     }
+
+    fgets(option, sizeof(option), stdin);
+    if (option[0] == '1') {
+        char playerName[MAX_NAME_LEN];
+        printf("\n\x1b[1;96m  Nome do jogador: \x1b[0m");
+        fflush(stdout);
+        fgets(playerName, sizeof(playerName), stdin);
+        playerName[strcspn(playerName, "\n")] = '\0';
+        if (playerName[0] == '\0') strcpy(playerName, "PLAYER");
+        strncpy(game->playerName, playerName, MAX_NAME_LEN - 1);
+        game->playerName[MAX_NAME_LEN - 1] = '\0';
+        game->state = STATE_DIFFICULTY;
+    } else if (option[0] == '2') {
+        game->state = STATE_RANKING;
+    } else {
+        game->state = STATE_QUIT;
+    }
+}
+
+void processDifficultyInput(Game *game) {
+    char option[16];
+    Difficulty diff = DIFFICULTY_MEDIUM;
+    fgets(option, sizeof(option), stdin);
+    if (option[0] == '1') diff = DIFFICULTY_EASY;
+    else if (option[0] == '3') diff = DIFFICULTY_HARD;
+    setupNewRun(game, game->playerName, diff);
+    game->state = STATE_PLAYING;
 }
 
 void processGameInput(Game *game) {
-    int key_val = 0;
-
-    if (!_kbhit()) {
-        sleepMs(30);
-        moveEnemy(game);
-        if (game->player.x == game->enemy.x && game->player.y == game->enemy.y) {
-            endGame(game, 0);
+    int key;
+    if (!_kbhit()) { sleepMs(20); return; }
+    key = _getch();
+    if (key == 0 || key == 224) {
+        int ext = _getch();
+        switch (ext) {
+            case KEY_UP:    movePlayer(game,  0, -1); break;
+            case KEY_DOWN:  movePlayer(game,  0,  1); break;
+            case KEY_LEFT:  movePlayer(game, -1,  0); break;
+            case KEY_RIGHT: movePlayer(game,  1,  0); break;
         }
         return;
     }
-
-    key_val = _getch();
-
-    if (key_val == 0 || key_val == 224) {
-        key_val = _getch();
-        if (key_val == 72) {
-            tryMovePlayer(game, 0, -1);
-        } else if (key_val == 80) {
-            tryMovePlayer(game, 0, 1);
-        } else if (key_val == 75) {
-            tryMovePlayer(game, -1, 0);
-        } else if (key_val == 77) {
-            tryMovePlayer(game, 1, 0);
-        }
-        return;
-    }
-
-    if (key_val == 'w' || key_val == 'W') {
-        tryMovePlayer(game, 0, -1);
-    } else if (key_val == 's' || key_val == 'S') {
-        tryMovePlayer(game, 0, 1);
-    } else if (key_val == 'a' || key_val == 'A') {
-        tryMovePlayer(game, -1, 0);
-    } else if (key_val == 'd' || key_val == 'D') {
-        tryMovePlayer(game, 1, 0);
-    } else if (key_val == 'r' || key_val == 'R') {
-        resetCurrentLevel(game);
-    } else if (key_val == 'q' || key_val == 'Q') {
-        game->state = STATE_MENU;
-    }
-
-    if (game->player.x == game->enemy.x && game->player.y == game->enemy.y) {
-        endGame(game, 0);
+    switch (key) {
+        case 'w': case 'W': movePlayer(game,  0, -1); break;
+        case 's': case 'S': movePlayer(game,  0,  1); break;
+        case 'a': case 'A': movePlayer(game, -1,  0); break;
+        case 'd': case 'D': movePlayer(game,  1,  0); break;
+        case 'p': case 'P': game->state = STATE_PAUSED; break;
+        case 'q': case 'Q': game->state = STATE_MENU;   break;
+        case 'r': case 'R': resetCurrentLevel(game);     break;
     }
 }
+
+void processPauseInput(Game *game) {
+    int key;
+    if (!_kbhit()) { sleepMs(50); return; }
+    key = _getch();
+    switch (key) {
+        case 'p': case 'P': game->state = STATE_PLAYING; break;
+        case 'q': case 'Q': game->state = STATE_MENU;    break;
+    }
+}
+
+void waitForAnyKey(void) { _getch(); }
