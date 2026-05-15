@@ -284,6 +284,9 @@ O projeto encontra-se funcional e preparado para futuras melhorias.
 - Comentários académicos
 - Arquitetura mais limpa e modular
 
+
+========================================================================================================================================================================================================================================
+
 # LOG mais Organizado (Final)
 # LOG.md — EscapeGrid
 
@@ -543,7 +546,7 @@ Motor de jogo totalmente funcional com:
 
 ---
 
-# Dia 3 — Sistemas avançados, IA e visual Neonpunk (4h)
+# Dia 3 — Sistemas avançados, IA e visual Neonpunk (4h + 2h)
 
 ## Objetivos
 
